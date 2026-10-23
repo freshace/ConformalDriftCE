@@ -1,0 +1,4 @@
+﻿state,model,queries,changed_plan_queries,geomean_point_over_interval_runtime,ci_low,ci_high,badplan_fraction_point,badplan_fraction_interval,badplan_fraction_reduction,reduction_ci_low,reduction_ci_high,timing_scope
+after,active,60,7,0.9866948811113828,0.9696039496902518,1.000326526056713,0.0,0.0,0.0,0.0,0.0,median of three random-order execution repetitions; best candidate used only for retrospective evaluation
+after,frozen,64,4,0.9921778580154103,0.9824917604410581,0.9992820360265375,0.0,0.0,0.0,0.0,0.0,median of three random-order execution repetitions; best candidate used only for retrospective evaluation
+before,frozen,64,2,0.9974791571627035,0.9934892416219471,1.0,0.0,0.0,0.0,0.0,0.0,median of three random-order execution repetitions; best candidate used only for retrospective evaluation

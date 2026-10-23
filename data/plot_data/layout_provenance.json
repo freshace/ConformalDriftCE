@@ -1,0 +1,96 @@
+{
+  "03_failure_modes_a": {
+    "canvas_inches": [
+      3.65,
+      2.95
+    ],
+    "all_observations_retained": true
+  },
+  "03_failure_modes_b": {
+    "canvas_inches": [
+      3.65,
+      2.95
+    ],
+    "all_observations_retained": true
+  },
+  "mechanism_numbers": {
+    "frozen": {
+      "self": 90.03333333333335,
+      "audit": 65.99866666666667,
+      "width": 8.119779405166152,
+      "q50": 4.6390228273773255
+    },
+    "recal_only": {
+      "self": 90.2,
+      "audit": 90.11866666666666,
+      "width": 29.51469325718735,
+      "q50": 4.6390228273773255
+    },
+    "repair": {
+      "self": 90.2,
+      "audit": 90.00533333333334,
+      "width": 39.58604916665777,
+      "q50": 2.8794372741444416
+    },
+    "garbage": {
+      "self": 90.2,
+      "audit": 90.10066666666667,
+      "width": 1253.753560155614,
+      "q50": 97.73935714883639
+    }
+  },
+  "ch4_width_fan": {
+    "canvas_inches": [
+      3.65,
+      2.95
+    ],
+    "all_observations_retained": true
+  },
+  "width_endpoint": {
+    "old_x": 1,
+    "new_x": 1.5,
+    "geometry_only": true
+  },
+  "09_data_level_a": {
+    "canvas_inches": [
+      3.65,
+      2.95
+    ],
+    "all_observations_retained": true
+  },
+  "09_data_level_b": {
+    "canvas_inches": [
+      3.65,
+      2.95
+    ],
+    "all_observations_retained": true
+  },
+  "09_data_level_merged": {
+    "canvas_inches": [
+      3.65,
+      2.95
+    ],
+    "all_observations_retained": true
+  },
+  "ch4_plan_verified_a": {
+    "canvas_inches": [
+      3.65,
+      2.95
+    ],
+    "all_observations_retained": true
+  },
+  "ch4_plan_verified_b": {
+    "canvas_inches": [
+      3.65,
+      2.95
+    ],
+    "all_observations_retained": true
+  },
+  "feedback_zero_subgroup": {
+    "canvas_inches": [
+      3.65,
+      2.95
+    ],
+    "all_observations_retained": true
+  }
+}

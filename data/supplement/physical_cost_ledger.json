@@ -1,0 +1,17 @@
+{
+  "total_wall_seconds": 2451.7531375,
+  "input_load_seconds": 0.2547964,
+  "initial_model_compute_seconds": 2.332485300000087,
+  "maintenance_core_compute_seconds": 0.4177380000014788,
+  "physical_sql_wall_seconds": {
+    "initial": 247.3344048000008,
+    "monitor": 583.7464396000028,
+    "audit": 406.32439479999454,
+    "validation_count": 21.252044800000977,
+    "repair": 1178.0013690999992
+  },
+  "other_processing_seconds": 12.089464700000008,
+  "other_includes": "connections, query partitioning, audit metric computation, JSON/CSV evidence serialization; not attributed as production model inference",
+  "initial_acquisition_counted_once_per_trace": true,
+  "strategy_cold_start_tables_charge_initial_once_each": true
+}
