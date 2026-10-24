@@ -19,6 +19,9 @@ Sources of the drawing code
 Canvas sizes are the page sizes of the archived Chinese PDFs, so every English
 figure keeps the exact aspect ratio of the Chinese figure it replaces.
 
+Later corrections distinguish normalized length W from the multiplicative
+endpoint factor in the width fan, and name the plotted featZ detector explicitly.
+
 Run:  python make_figures_en.py
 """
 
@@ -216,6 +219,10 @@ def fig03_failure_modes():
 # --------------------------------------------------------------------------- Fig. 4
 def fig04_width_fan():
     """redraw_layout.width_geometry()"""
+    matched = pd.read_csv(TAB / "matched.csv")
+    # The NPZ stores exp(q), the endpoint factor on the shifted (1 + y) scale.
+    # Preserve that geometry; W = (U - L) / (1 + prediction), after clipping,
+    # is a different quantity and must come from the manuscript's matched table.
     z = np.load(PLOT / "residual_sensitivity_raw.npz")
     with mpl.rc_context({"font.size": 7, "axes.labelsize": 7, "xtick.labelsize": 7, "ytick.labelsize": 7}):
         fig, (a, b) = plt.subplots(1, 2, figsize=CANVAS["ch4_width_fan"])
@@ -229,10 +236,14 @@ def fig04_width_fan():
         endpoint = 1.5
         x = endpoint * t
         gray, green = "#8A8F98", "#1B8A65"
-        for tag_, cov, w, col, style, marker in [
-            ("Base", z["base_matched_coverage"] * 100, z["base_matched_width"], gray, "--", "s"),
-            ("Residual", z["residual_coverage"] * 100, z["residual_width"], green, "-", "o"),
+        for tag_, arm, w, col, style, marker in [
+            ("Base", "base", z["base_matched_width"], gray, "--", "s"),
+            ("Residual", "residual", z["residual_width"], green, "-", "o"),
         ]:
+            baseline = matched[(matched.arm == arm) & np.isclose(matched.factor, 1)].sort_values("repeat")
+            assert np.array_equal(baseline["repeat"].to_numpy(), np.arange(len(w)))
+            cov = baseline.coverage.to_numpy() * 100
+            mean_width = baseline.width.mean()
             wm, wl, wh = ci_rows(w, 20261006, 5000)
             cm, _, _ = ci_rows(cov, 20261006, 5000)
             lower, upper = np.exp(-np.log(wm) * t ** 2), np.exp(np.log(wm) * t ** 2)
@@ -242,23 +253,24 @@ def fig04_width_fan():
                 a.plot(x, np.exp(-np.log(v) * t ** 2), color=col, alpha=.20, lw=.5)
             for edge in [lower, upper]:
                 a.plot(x, edge, color=col, ls=style, lw=1.3)
-            a.scatter(np.full(10, endpoint), w, s=8, color=col, marker=marker, alpha=.4)
-            a.scatter(np.full(10, endpoint), 1 / w, s=8, color=col, marker=marker, alpha=.4)
+            a.scatter(np.full(len(w), endpoint), w, s=8, color=col, marker=marker, alpha=.4)
+            a.scatter(np.full(len(w), endpoint), 1 / w, s=8, color=col, marker=marker, alpha=.4)
             a.errorbar(endpoint, wm, yerr=[[wm - wl], [wh - wm]], fmt=marker, color=col, capsize=2, ms=4)
             a.errorbar(endpoint, 1 / wm, yerr=[[1 / wm - 1 / wh], [1 / wl - 1 / wm]],
                        fmt=marker, color=col, capsize=2, ms=4)
-            a.annotate(f"{tag_}\n{wm:.2f}×\n{cm:.2f}%", (endpoint, wm), xytext=(3, -1),
+            a.annotate(f"{tag_}\nW = {mean_width:.2f}\n{cm:.2f}%", (endpoint, wm), xytext=(3, -1),
                        textcoords="offset points", va="top", fontsize=6.8,
                        color="#252525" if tag_ == "Base" else green)
         a.set(yscale="log", ylim=(.0015, 550), xlim=(-.02, 2.25),
-              ylabel="Ratio to point prediction", xlabel="Expansion position")
+              ylabel="Ratio on shifted scale", xlabel="Expansion position")
         a.set_yticks([.01, .1, 1, 10, 100], ["0.01", "0.1", "1", "10", "100"])
         a.set_xticks([0, endpoint], ["Center", "Interval end"])
         a.minorticks_off()
-        for name, key, col, marker, style in [("Matched Base", "match_cov", gray, "s", "--"),
-                                              ("Residual", "res_cov", green, "o", "-")]:
-            m, low, high = ci_rows(z[key] * 100, 20261006, 5000)
-            b.errorbar(z["dose"][0], m, yerr=np.stack([m - low, high - m]),
+        for name, arm, col, marker, style in [("Matched Base", "base", gray, "s", "--"),
+                                              ("Residual", "residual", green, "o", "-")]:
+            coverage = matched[matched.arm == arm].pivot(index="repeat", columns="factor", values="coverage")
+            m, low, high = ci_rows(np.asfortranarray(coverage.to_numpy()) * 100, 20261006, 5000)
+            b.errorbar(coverage.columns.to_numpy(), m, yerr=np.stack([m - low, high - m]),
                        fmt=marker + style, color=col, capsize=2, lw=1)
         b.axhline(90, color="#252525", ls=":", lw=.7)
         b.set(xscale="log", xlim=(.92, 8.3), ylim=(55, 95),
@@ -405,7 +417,7 @@ def fig08_detection():
     for det, col, mk, ls, name in [
         (0, "#2166AC", "o", "-", "Coverage (labeled)"),
         (1, "#A65E83", "^", "--", "Residual (labeled)"),
-        (3, "#7283AD", "s", ":", "Feature mean (unlabeled)"),
+        (3, "#7283AD", "s", ":", "featZ (unlabeled)"),
     ]:
         means = []
         for fac in factors:
