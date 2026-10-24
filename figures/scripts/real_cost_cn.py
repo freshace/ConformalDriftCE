@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""图 10（真实 30 窗回放）中文重绘脚本。
+"""真实 30 窗回放图（Figure 9）中文重绘脚本。
 
 数据源：data/supplement/sql_runs.csv、data/supplement/sql_windows.csv
 输出  ：figures/final/real_cost_cn.{pdf,svg,png}
