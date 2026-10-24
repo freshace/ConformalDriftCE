@@ -530,6 +530,14 @@ def fig10_real_cost():
     CW = "workload_cycles"
     FOCAL = ["frozen", "current_coverage"]
 
+    def panel_title(ax, letter, title):
+        ax.text(0, 1.045, letter, transform=ax.transAxes,
+                fontweight="bold", fontsize=9, va="bottom")
+        # Match Figure 7's physical title offset, independent of panel width.
+        ax.annotate(title, (0, 1.045), xycoords="axes fraction",
+                    xytext=(10.324, 0), textcoords="offset points",
+                    fontsize=8, va="bottom")
+
     def boot_ci(v, seed=61012, n=10000):
         v = np.asarray(v, float)
         v = v[np.isfinite(v)]
@@ -555,15 +563,14 @@ def fig10_real_cost():
                  marker="o" if focal else None, ms=2.6, mew=0, label=RC_NAME[pol])
     for w in (6, 12, 18, 24):
         axa.axvline(w - .5, color="#9aa3ad", lw=.6, ls=(0, (2, 2.5)), zorder=1)
-    axa.text(6, 101.5, "switch", ha="center", va="bottom", fontsize=6.2, color="#6b7480")
+    axa.text(8.5, 101.5, "switch", ha="center", va="bottom", fontsize=6, color="#6b7480")
     axa.axhline(90, color="#777777", lw=.65, ls=":", zorder=1)
     axa.set_xlim(-.6, W - .4)
     axa.set_ylim(55, 106)
     axa.set_yticks([60, 70, 80, 90, 100])
     axa.set_xlabel("Window")
     axa.set_ylabel("Audit coverage (%)")
-    axa.text(0, 1.045, "a", transform=axa.transAxes, fontweight="bold", fontsize=9, va="bottom")
-    axa.text(.062, 1.045, "Audit coverage", transform=axa.transAxes, fontsize=8, va="bottom")
+    panel_title(axa, "a", "Audit coverage")
 
     grp = runs[runs.condition == CW].groupby("policy")
     yy = np.arange(len(POL))
@@ -574,21 +581,22 @@ def fig10_real_cost():
     axb.barh(yy, rep, left=mon, height=.62, color="#267BA3", edgecolor="white", lw=.4, zorder=2)
     err_lo, err_hi = [], []
     for i, k in enumerate(POL):
-        _m, lo, hi = boot_ci(grp.get_group(k).deployment_wall_seconds.to_numpy())
+        # The visible bars and their CIs both measure monitoring + repair SQL.
+        g = grp.get_group(k)
+        _m, lo, hi = boot_ci((g.monitor_wall_seconds + g.repair_wall_seconds).to_numpy())
         err_lo.append(max(tot[i] - lo, 0))
         err_hi.append(max(hi - tot[i], 0))
     axb.errorbar(tot, yy, xerr=[err_lo, err_hi], fmt="none", ecolor="#444444",
                  capsize=2, lw=.8, zorder=4)
     j0 = POL.index("frozen_trigger")
-    axb.text(mon[j0] / 2 + .8, yy[j0], "mon.", ha="left", va="center", fontsize=6.4, color="#33485c")
+    axb.text(mon[j0] / 2, yy[j0], "mon.", ha="center", va="center", fontsize=6, color="#33485c")
     axb.text(mon[j0] + rep[j0] / 2, yy[j0], "rep.", ha="center", va="center", fontsize=6.4, color="white")
     axb.set_yticks(yy, [RC_SHORT[k] for k in POL])
     axb.invert_yaxis()
     axb.tick_params(axis="y", length=0, pad=2)
     axb.set_xlabel("Measured online time (s)")
     axb.set_xlim(0, max(tot) * 1.28)
-    axb.text(0, 1.045, "b", transform=axb.transAxes, fontweight="bold", fontsize=9, va="bottom")
-    axb.text(.062, 1.045, "Cost breakdown", transform=axb.transAxes, fontsize=8, va="bottom")
+    panel_title(axb, "b", "Cost breakdown")
 
     MARKC = {"correlation_control": "o", "workload_cycles": "s"}
     for cond in ["correlation_control", "workload_cycles"]:
@@ -612,12 +620,12 @@ def fig10_real_cost():
     axc.set_ylabel("Coverage (%)")
     axc.set_ylim(78, 97)
     axc.set_xlim(60, 1300)
-    axc.text(.98, .04, "filled: correlation control\nopen: joint change", transform=axc.transAxes,
+    axc.text(.98, .04, "filled: corr. control\nopen: joint change", transform=axc.transAxes,
              ha="right", va="bottom", fontsize=6.4, color="#5b6470", linespacing=1.35)
-    axc.text(0, 1.045, "c", transform=axc.transAxes, fontweight="bold", fontsize=9, va="bottom")
-    axc.text(.062, 1.045, "Coverage vs labels", transform=axc.transAxes, fontsize=8, va="bottom")
+    panel_title(axc, "c", "Coverage vs labels")
 
-    handles = [Line2D([], [], color=COL[i], marker=MARK[i], lw=1.0, ms=3, label=RC_NAME[POL[i]])
+    # Color identifies policy; filled/open markers in panel c identify condition.
+    handles = [Line2D([], [], color=COL[i], lw=1.0, label=RC_NAME[POL[i]])
                for i in range(len(POL))]
     fig.legend(handles=handles, ncol=6, loc="upper center", bbox_to_anchor=(.52, .995),
                columnspacing=1.1, handlelength=1.5, handletextpad=.5)
