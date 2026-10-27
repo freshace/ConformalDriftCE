@@ -40,3 +40,29 @@ committed tables under `data/` are the same numbers that appear in the paper, an
 analysis scripts reproduce them. Re-running the full experiment suite additionally needs the
 feature cache and the PRICE artefacts above; `run_all.py` reports which experiments it had to skip
 and why.
+
+## Getting the missing inputs
+
+The code reads its inputs from environment variables, so no file paths are hard-coded:
+
+| Variable | Used by | Meaning |
+|---|---|---|
+| `DRIFTCE_DATA_PATH` | `config.py`, most experiments | Path to the query feature/label cache (`features40_s3a.pkl`) |
+| `DRIFTCE_FEATURES_ROOT` | `experiment_crossdataset*.py` | Directory holding the per-database feature caches |
+| `DRIFT_FIG_OUT` | `experiments/plot_fig12_planregret.py` | Output directory for regenerated figures |
+
+Steps for a full re-run:
+
+1. **Query feature cache.** Build it with the PRICE feature pipeline on the four benchmark
+   workloads, or copy an existing `features40_s3a.pkl` and point `DRIFTCE_DATA_PATH` at it. One
+   cache covers one workload (≈160–210 MB); the cross-database experiments expect one per database
+   under `DRIFTCE_FEATURES_ROOT`.
+2. **PRICE artefacts.** Use the public PRICE release: its pretrained checkpoint and the
+   `features/` directory it ships. No PRICE weights are redistributed here.
+3. **Databases.** Load STATS-CEB and JOB/IMDb into PostgreSQL 16; the SQL replay experiments
+   (`data/tables/sql_runs.csv`, `sql_windows.csv`) were produced against those schemas.
+
+Runtime can be reduced without changing the reported settings: most confidence-interval
+experiments expose their repetition count through an environment variable
+(`CORR_R`, `DET_R`, `NEC_R`, `MA_R`, `BL_R`, `GC_R`, `DS_R`, `ABL_R`, `CD_R`, `VA_R`, defaulting to
+the values used in the paper).
