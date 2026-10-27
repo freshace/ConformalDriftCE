@@ -39,15 +39,23 @@ loaded from `data/` (see `DATA.md`).
 ## Quick start
 
 ```bash
-python run_all.py            # runs the drift experiments, writes results_repro/
+python run_all.py            # auto-detects which experiments can run
+python run_all.py --strict   # exit non-zero if anything had to be skipped
 ```
 
-`run_all.py` runs deterministically (fixed seed, single job) and writes every produced array to
-`results_repro/`. Individual experiments can be run on their own, for example:
+`run_all.py` has two modes:
+
+- **table-only** (default for a fresh clone): the external feature cache is absent, so only the
+  experiments that read the committed tables under `data/` are executed. Everything else is
+  reported as *skipped*, with the reason.
+- **full**: if `data/features40_s3a.pkl` exists, or `DRIFTCE_DATA_PATH` points at it, the whole
+  suite runs deterministically (fixed seed, single job).
+
+Individual experiments can be run on their own, for example:
 
 ```bash
-python experiments/experiment_correlation.py
-python experiments/experiment_detection_ci.py
+python experiments/experiment_planregret_analysis.py   # reads only committed tables
+python experiments/experiment_correlation.py           # needs the external feature cache
 ```
 
 ## Reproducing a specific number
@@ -59,6 +67,14 @@ python experiments/experiment_detection_ci.py
   underlying arrays; the cached arrays used in the submitted version are the `results_*.npy`
   files at the repository root.
 - `REPRODUCIBILITY.md` lists the seeds, the deterministic settings, and the comparison protocol.
+
+## Scope of this artifact
+
+The repository ships the code, the tables and the cached arrays behind every reported number, so
+the paper's tables can be **verified** out of the box. Re-running the full experiment suite from
+scratch additionally requires the query feature cache and the PRICE artefacts, which are not
+redistributed (see `DATA.md`); it is not claimed that a fresh clone can regenerate every result
+end to end.
 
 ## Notes on the code
 
