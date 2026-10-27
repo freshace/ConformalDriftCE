@@ -29,9 +29,12 @@ The script is idempotent: it recreates `results_repro/` from scratch and does no
 
 ## Checking a reported number
 
-1. Run the script named after the experiment (for example `experiments/experiment_detection_ci.py`
-   for the detector comparison with confidence intervals).
-2. Compare the printed statistics with the corresponding table or figure in the paper.
+1. Run `python check_tables.py`. It recomputes every number of Table 3 and Table 5 and the figures
+   quoted in the abstract from the committed CSVs, and prints `PASS`/`FAIL` per number together
+   with the file it read. This needs only the standard library and a fresh clone.
+2. For results outside those tables, run the script named after the experiment (for example
+   `experiments/experiment_detection_ci.py` for the detector comparison with confidence intervals);
+   these need the external feature cache described in `DATA.md`.
 3. The cached arrays used in the submitted version are the `results_*.npy` files at the repository
    root; loading them reproduces the plotted curves without re-running the experiments.
 

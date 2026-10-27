@@ -39,27 +39,31 @@ loaded from `data/` (see `DATA.md`).
 ## Quick start
 
 ```bash
-python run_all.py            # auto-detects which experiments can run
-python run_all.py --strict   # exit non-zero if anything had to be skipped
+python check_tables.py       # verify the paper's tables against data/tables/  (39 checks)
+python run_all.py            # metrics self-check + table check + runnable experiments
 ```
+
+`check_tables.py` needs nothing beyond the standard library: it recomputes the coverage,
+label-cost and runtime numbers of Table 3 and Table 5 and the figures quoted in the abstract
+directly from the committed CSV tables, and prints `PASS`/`FAIL` for each of them.
 
 `run_all.py` has two modes:
 
 - **table-only** (default for a fresh clone): the external feature cache is absent, so only the
-  experiments that read the committed tables under `data/` are executed. Everything else is
-  reported as *skipped*, with the reason.
+  self-checks and `check_tables.py` run. The experiment suite is reported as *skipped*, with the
+  reason.
 - **full**: if `data/features40_s3a.pkl` exists, or `DRIFTCE_DATA_PATH` points at it, the whole
   suite runs deterministically (fixed seed, single job).
 
 Individual experiments can be run on their own, for example:
 
 ```bash
-python experiments/experiment_planregret_analysis.py   # reads only committed tables
 python experiments/experiment_correlation.py           # needs the external feature cache
 ```
 
 ## Reproducing a specific number
 
+- `check_tables.py` covers the headline results; each of its checks names the CSV it reads.
 - The scripts under `experiments/` are named after the experiment they implement
   (`experiment_correlation*.py`, `experiment_detection*.py`, `experiment_crossdataset*.py`,
   `experiment_*_ci.py` for the confidence-interval variants, …).
@@ -71,10 +75,10 @@ python experiments/experiment_correlation.py           # needs the external feat
 ## Scope of this artifact
 
 The repository ships the code, the tables and the cached arrays behind every reported number, so
-the paper's tables can be **verified** out of the box. Re-running the full experiment suite from
-scratch additionally requires the query feature cache and the PRICE artefacts, which are not
-redistributed (see `DATA.md`); it is not claimed that a fresh clone can regenerate every result
-end to end.
+the paper's tables can be **verified** out of the box (`python check_tables.py`). Re-running the
+full experiment suite from scratch additionally requires the query feature cache and the PRICE
+artefacts, which are not redistributed (see `DATA.md`); it is not claimed that a fresh clone can
+regenerate every result end to end.
 
 ## Notes on the code
 

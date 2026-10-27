@@ -30,10 +30,12 @@ os.makedirs(OUT, exist_ok=True)
 DATA_PATH = os.environ.get("DRIFTCE_DATA_PATH", os.path.join("data", "features40_s3a.pkl"))
 
 # Experiments that only read the committed tables / cached arrays and therefore
-# run in a fresh clone. Keep this list short and explicit.
-TABLE_ONLY = [
-    "experiment_planregret_analysis.py",
-]
+# run in a fresh clone. The table-level checker below is the main entry point.
+TABLE_ONLY = []
+
+# Always run: recomputes the paper's Table 3 / Table 5 numbers and the abstract
+# figures from the committed tables under data/.
+CHECKER = "check_tables.py"
 
 EXPS = [
     "experiment_correlation.py",
@@ -132,6 +134,26 @@ def run_metrics_selfcheck():
     return True
 
 
+def run_checker():
+    """Recompute the paper's table numbers from the committed tables."""
+    path = os.path.join(DIR, CHECKER)
+    print("\n########## check_tables.py (table-level verification) ##########")
+    if not os.path.exists(path):
+        print(f"[MISSING] {CHECKER}")
+        return False
+    try:
+        r = subprocess.run([sys.executable, path, "--quiet"], cwd=DIR, capture_output=True,
+                           text=True, timeout=300, encoding="utf-8", errors="replace")
+        print((r.stdout or "").strip())
+        if r.returncode != 0:
+            print(f"[FAILED exit={r.returncode}]\n{(r.stderr or '')[-600:]}")
+            return False
+        return True
+    except Exception as e:  # pragma: no cover
+        print(f"[ERROR] {str(e)[:160]}")
+        return False
+
+
 def run_one(exp, timeout):
     path = os.path.join(DIR, "experiments", exp)
     print(f"\n########## {exp} ##########")
@@ -169,6 +191,7 @@ def main():
 
     ready = preflight()
     metrics_ok = run_metrics_selfcheck()
+    checker_ok = run_checker()
 
     if ready:
         todo, skipped = EXPS, []
@@ -186,6 +209,7 @@ def main():
 
     print("\n" + "=" * 64)
     print(f"metrics self-check: {'PASSED' if metrics_ok else 'FAILED'}")
+    print(f"table-level checker: {'PASSED' if checker_ok else 'FAILED'}")
     print(f"experiments: {results['passed']} passed, {results['failed']} failed, "
           f"{results['timeout']} timeout, {results['error']} error, {results['missing']} missing")
     print(f"skipped (missing external inputs): {len(skipped)}")
@@ -193,7 +217,7 @@ def main():
     print("=" * 64)
 
     hard_fail = (results["failed"] or results["timeout"] or results["error"]
-                 or results["missing"] or not metrics_ok)
+                 or results["missing"] or not metrics_ok or not checker_ok)
     if hard_fail:
         return 1
     if args.strict and skipped:
