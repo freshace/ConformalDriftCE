@@ -44,6 +44,18 @@ def check(name, expected, actual, tol, note=""):
     })
 
 
+def check_le(name, limit, actual, note=""):
+    """Upper-bound claim: ``actual`` must not exceed ``limit``."""
+    CHECKS.append({
+        "name": name,
+        "expected": limit,
+        "actual": actual,
+        "tol": 0.0,
+        "note": note,
+        "ok": actual <= limit + 1e-9,
+    })
+
+
 # ---------------------------------------------------------------- Table 3
 def check_table3():
     """Coverage before and after repair for the four base models."""
@@ -124,6 +136,42 @@ def check_headline():
     check("Abstract  label reduction (28%)", 28.0, (per_lab - cur_lab) / per_lab * 100.0, 0.6, "sql_runs.csv")
 
 
+# ---------------------------------------------------------------- phase sweep
+PHASE_RANGES = {
+    "stats": (85.81, 88.54),
+    "imdb": (86.43, 89.18),
+    "ergastf1": (84.54, 88.12),
+    "genome": (72.50, 84.17),
+}
+
+
+def check_phase_sweep():
+    """Periodic schedule shifted by 0-8 windows over the 80-window replay."""
+    path = ROOT / "data" / "period_sweep" / "summary.csv"
+    with open(path, newline="", encoding="utf-8") as f:
+        rows = [r for r in csv.DictReader(f) if r["sweep"] == "A_phase"]
+    groups = {}
+    for r in rows:
+        groups.setdefault(r["dataset"], []).append(float(r["mean_coverage"]) * 100.0)
+    for dataset, (lo, hi) in PHASE_RANGES.items():
+        values = groups[dataset]
+        check(f"Phase sweep  {dataset:8s} min coverage", lo, min(values), 0.01, "period_sweep/summary.csv")
+        check(f"Phase sweep  {dataset:8s} max coverage", hi, max(values), 0.01, "period_sweep/summary.csv")
+
+
+def check_joint_phase():
+    """Joint change: the phase shift moves periodic coverage by at most 2.7 pp."""
+    base = ROOT / "data" / "period_sweep_sql"
+    per_phase = {}
+    for tag in ("-1", "0", "1", "2", "3"):
+        with open(base / f"sql_runs_phase{tag}.csv", newline="", encoding="utf-8") as f:
+            rows = [r for r in csv.DictReader(f) if r["condition"] == "workload_cycles"]
+        per_phase[tag] = mean(float(r["coverage"]) for r in rows) * 100.0
+    lo, hi = min(per_phase.values()), max(per_phase.values())
+    check_le("Joint change  phase shift range (<= 2.7 pp)", 2.7, hi - lo, "period_sweep_sql/")
+    check_le("Joint change  default within best (<= 0.7 pp)", 0.7, hi - per_phase["0"], "period_sweep_sql/")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Verify the paper's table numbers against data/tables/.")
     ap.add_argument("--quiet", action="store_true", help="print the summary only")
@@ -137,6 +185,8 @@ def main():
     check_abstract_range()
     check_table5()
     check_headline()
+    check_phase_sweep()
+    check_joint_phase()
 
     failed = [c for c in CHECKS if not c["ok"]]
     if not args.quiet:

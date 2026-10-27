@@ -18,7 +18,9 @@ window monitoring, on-demand repair, and an independent audit on disjoint query 
 ├── config.py, data.py, drift.py, features.py     data loading, features, drift injection
 ├── conformal.py, model.py, metrics.py            calibration, correction, evaluation
 ├── pool_adapter.py, datasim.py, merge_pools.py   feedback pools and synthetic data
-├── run_all.py                one-command reproduction of the drift experiments
+├── run_all.py                dependency-aware driver for the experiment suite
+├── check_tables.py           recomputes the paper's table numbers from data/
+├── LICENSE                   MIT
 ├── experiments/              one script per experiment reported in the paper
 ├── scripts/                  helper utilities
 ├── data/                     derived tables and protocol files (≈16 MB)
@@ -27,19 +29,32 @@ window monitoring, on-demand repair, and an independent audit on disjoint query 
 └── results_*.npy             cached result arrays behind the reported tables
 ```
 
+## What you need before running anything
+
+Two levels of use, with different requirements:
+
+| Goal | What you need |
+|---|---|
+| **Verify the paper's numbers** | nothing beyond Python and this repository — `python check_tables.py` |
+| **Re-run the experiment suite** | the query feature cache (`features40_s3a.pkl`, not shipped, 160–210 MB per workload) plus the PRICE artefacts |
+
+Only the SQL replay needs more: **PostgreSQL 16** with both **STATS-CDB** and **JOB/IMDb** loaded
+(the original runs used port 55432). Everything else is offline. See `DATA.md` for how to obtain
+each input and which environment variables point at them.
+
 ## Requirements
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-Experiments that replay SQL plans additionally need **PostgreSQL 16** with the STATS-CDB schema
-loaded from `data/` (see `DATA.md`).
+Experiments that replay SQL plans additionally need PostgreSQL 16 with the STATS-CDB and JOB/IMDb
+schemas loaded (see `DATA.md`).
 
 ## Quick start
 
 ```bash
-python check_tables.py       # verify the paper's tables against data/tables/  (39 checks)
+python check_tables.py       # verify the paper's tables against data/tables/  (49 checks)
 python run_all.py            # metrics self-check + table check + runnable experiments
 ```
 
@@ -60,6 +75,27 @@ Individual experiments can be run on their own, for example:
 ```bash
 python experiments/experiment_correlation.py           # needs the external feature cache
 ```
+
+## Phase sweep experiments
+
+`experiments/period_sweep.py`, `phase30.py` and `seed_extension.py` produce the schedule-phase
+results quoted in the abstract and in the recurring-drift subsection: periodic updates shifted by
+0–8 windows (sweep A), a varying number of repairs (sweep B), the 30-seed extension, and the
+30-window SQL replay of the same sweep.
+
+Their outputs are committed, so the numbers can be checked without re-running anything:
+
+| Output | Content |
+|---|---|
+| `data/period_sweep/summary.csv` | coverage and paired gain per database, sweep and phase setting |
+| `data/period_sweep/seed_extension.csv` | the 20 additional seeds (130–149) for current / periodic / initial reference |
+| `data/period_sweep_sql/sql_runs_phase*.csv` | per-phase summaries of the 30-window SQL replay, 5 splits each |
+| `data/period_sweep_sql/sql_windows_phase*.csv` | per-window detail behind those summaries |
+
+Re-running the sweep needs the archived provenance inputs (`provenance/2026-10-12/{code,inputs,raw}`)
+and `lightgbm`; that tree is **not** part of this repository. `run_all.py` therefore reports the
+three scripts as skipped unless it finds it. The sweep itself takes about 20 seconds once the
+inputs are in place; the SQL replay additionally needs PostgreSQL.
 
 ## Reproducing a specific number
 

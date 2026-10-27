@@ -82,6 +82,16 @@ EXPS = [
     "experiment_planregret_analysis.py",
 ]
 
+# Schedule-phase sweep. These scripts consume the archived provenance tree of the
+# original offline run, which is not redistributed; their committed outputs live in
+# data/period_sweep/ and data/period_sweep_sql/.
+PHASE_SWEEP = ["period_sweep.py", "phase30.py", "seed_extension.py"]
+PHASE_DEPS = [
+    os.path.join("provenance", "2026-10-12", "code"),
+    os.path.join("provenance", "2026-10-12", "inputs"),
+    os.path.join("provenance", "2026-10-12", "raw"),
+]
+
 TIMEOUTS = {
     "experiment_correlation_realdata_ci.py": 2400,
     "experiment_detection_ci.py": 2400,
@@ -207,12 +217,25 @@ def main():
         status = run_one(exp, TIMEOUTS.get(exp, DEFAULT_TIMEOUT))
         results[status] += 1
 
+    # Schedule-phase sweep: needs the archived provenance tree, which is not shipped.
+    phase_ready = all(os.path.exists(os.path.join(DIR, p)) for p in PHASE_DEPS)
+    phase_skipped = 0
+    if phase_ready:
+        print("\n########## schedule-phase sweep ##########")
+        for exp in PHASE_SWEEP:
+            status = run_one(exp, TIMEOUTS.get(exp, DEFAULT_TIMEOUT))
+            results[status] += 1
+    else:
+        phase_skipped = len(PHASE_SWEEP)
+        print(f"\n[skip] {phase_skipped} schedule-phase scripts need provenance/2026-10-12/ "
+              "(code, inputs, raw); see README")
+
     print("\n" + "=" * 64)
     print(f"metrics self-check: {'PASSED' if metrics_ok else 'FAILED'}")
     print(f"table-level checker: {'PASSED' if checker_ok else 'FAILED'}")
     print(f"experiments: {results['passed']} passed, {results['failed']} failed, "
           f"{results['timeout']} timeout, {results['error']} error, {results['missing']} missing")
-    print(f"skipped (missing external inputs): {len(skipped)}")
+    print(f"skipped (missing external inputs): {len(skipped) + phase_skipped}")
     print(f"logs: {OUT}")
     print("=" * 64)
 

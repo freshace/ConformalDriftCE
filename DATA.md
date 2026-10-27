@@ -10,6 +10,7 @@ This repository ships code, protocol files, derived tables and figure sources (a
 | `data/tables/` | Derived result tables (offline windows, feedback, mechanisms) used to rebuild the paper tables |
 | `data/continuous/` | Derived continuous-maintenance tables |
 | `data/period_sweep/` | Phase sweep of the periodic maintenance schedule: per-run results (`period_runs.csv`), seed extension, summary tables and logs |
+| `data/period_sweep_sql/` | 30-window SQL replay of the same phase sweep: per-phase run summaries (`sql_runs_phase{,-1,1,2,3}.csv`, 5 splits each) and per-window details (`sql_windows_phase*.csv`) |
 | `data/fig8/` | Detector raw and summary CSVs behind Figure 8 |
 | other `data/*` | Protocol and configuration files |
 
