@@ -199,6 +199,33 @@ def check_initial_reference_gap():
           "offline_windows.csv (cycles)")
 
 
+def check_phase_gain():
+    """Gain of the current reference over the best post-hoc schedule.
+
+    The 10-seed rows are recomputed from ``period_runs.csv``. The 30-seed row
+    needs the schedule re-run on seeds 130-149, whose per-seed values are not
+    committed; it is checked against the transcript ``phase30.log`` instead.
+    """
+    path = ROOT / "data" / "period_sweep" / "period_runs.csv"
+    with open(path, newline="", encoding="utf-8") as f:
+        gains = [float(r["gain_pp"]) for r in csv.DictReader(f)
+                 if r["dataset"] == "genome" and r["setting"] == "A:10 repairs, phase+4"]
+    check("Phase gain  genome, 10 seeds, over best phase", 2.61, mean(gains), 0.01,
+          "period_sweep/period_runs.csv")
+
+    log = ROOT / "data" / "period_sweep" / "phase30.log"
+    gain = lo = hi = None
+    for line in log.read_text(encoding="utf-16", errors="replace").splitlines():
+        parts = line.split()
+        if len(parts) > 4 and parts[0] == "genome" and parts[1] == "30":
+            gain = float(parts[4])
+            lo, hi = (float(x) for x in line[line.index("[") + 1:line.index("]")].split(","))
+    check("Phase gain  genome, 30 seeds, over best phase", 1.79, gain, 0.01,
+          "period_sweep/phase30.log")
+    check("Phase gain  genome, 30 seeds, CI low", 0.67, lo, 0.01, "period_sweep/phase30.log")
+    check("Phase gain  genome, 30 seeds, CI high", 2.62, hi, 0.01, "period_sweep/phase30.log")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Verify the paper's table numbers against data/tables/.")
     ap.add_argument("--quiet", action="store_true", help="print the summary only")
@@ -215,6 +242,7 @@ def main():
     check_phase_sweep()
     check_joint_phase()
     check_initial_reference_gap()
+    check_phase_gain()
 
     failed = [c for c in CHECKS if not c["ok"]]
     if not args.quiet:

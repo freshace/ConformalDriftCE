@@ -1,4 +1,4 @@
-﻿# Conformal-DriftCE — Artifact
+# Conformal-DriftCE — Artifact
 
 Artifact for the paper **“When Coverage Misleads: Designing Reliability Monitoring for
 Cardinality Estimation Under Drift”** (PVLDB Volume 20 submission).
@@ -54,7 +54,7 @@ schemas loaded (see `DATA.md`).
 ## Quick start
 
 ```bash
-python check_tables.py       # verify the paper's tables against data/tables/  (50 checks)
+python check_tables.py       # verify the paper's tables against data/tables/  (54 checks)
 python run_all.py            # metrics self-check + table check + runnable experiments
 ```
 
@@ -96,6 +96,12 @@ Re-running the sweep needs the archived provenance inputs (`provenance/2026-10-1
 and `lightgbm`; that tree is **not** part of this repository. `run_all.py` therefore reports the
 three scripts as skipped unless it finds it. The sweep itself takes about 20 seconds once the
 inputs are in place; the SQL replay additionally needs PostgreSQL.
+
+`data/period_sweep/phase30.log` is the transcript of the 30-seed comparison against the best
+post-hoc schedule, with a 4,000-resample bootstrap interval. The per-seed coverage of the
+best-phase schedule for the 20 added seeds was produced in that run and is not committed, so
+`check_tables.py` verifies the 10-seed row by recomputation and the 30-seed row against the
+transcript.
 
 ## Reproducing a specific number
 
