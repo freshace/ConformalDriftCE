@@ -9,7 +9,12 @@ This repository ships code, protocol files, derived tables and figure sources (a
 |---|---|
 | `data/tables/` | Derived result tables (offline windows, feedback, mechanisms) used to rebuild the paper tables |
 | `data/continuous/` | Derived continuous-maintenance tables |
+| `data/period_sweep/` | Phase sweep of the periodic maintenance schedule: per-run results (`period_runs.csv`), seed extension, summary tables and logs |
+| `data/fig8/` | Detector raw and summary CSVs behind Figure 8 |
 | other `data/*` | Protocol and configuration files |
+
+The `data/period_sweep/cache/` directory (about 36 MB of `initial_*.npz`) is **not committed**: it is an
+intermediate prediction cache that `experiments/period_sweep.py` regenerates.
 
 ## External sources
 
