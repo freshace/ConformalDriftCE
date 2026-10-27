@@ -25,7 +25,7 @@ window monitoring, on-demand repair, and an independent audit on disjoint query 
 ├── scripts/                  helper utilities
 ├── data/                     derived tables and protocol files (≈16 MB)
 ├── figures/                  figure sources (PDF/PNG/SVG)
-├── supplement/               Appendices A–H of the paper (DOCX and PDF)
+├── supplement/               Appendices A–I of the paper (DOCX and PDF)
 └── results_*.npy             cached result arrays behind the reported tables
 ```
 
@@ -132,10 +132,9 @@ regenerate every result end to end.
 
 ## Supplementary material
 
-`supplement/` contains Appendices A–H of the paper — the experimental protocol and evidence ledger,
-the coverage proof, the complete result tables, the continuous-maintenance protocol and results, and
-the plan-utility audit — in both DOCX and PDF form. These are the appendices referred to from the
-submitted manuscript.
+`supplement/` contains Appendices A–I of the paper — the experimental protocol and evidence ledger,
+the coverage proof, the complete result tables, the continuous-maintenance protocol and results, the
+plan-utility audit, and the schedule-phase sweep (Tables 17–18) — in both DOCX and PDF form.
 
 ## Data
 
