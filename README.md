@@ -1,4 +1,4 @@
-# Conformal-DriftCE — Artifact
+﻿# Conformal-DriftCE — Artifact
 
 Artifact for the paper **“When Coverage Misleads: Designing Reliability Monitoring for
 Cardinality Estimation Under Drift”** (PVLDB Volume 20 submission).
@@ -54,7 +54,7 @@ schemas loaded (see `DATA.md`).
 ## Quick start
 
 ```bash
-python check_tables.py       # verify the paper's tables against data/tables/  (49 checks)
+python check_tables.py       # verify the paper's tables against data/tables/  (50 checks)
 python run_all.py            # metrics self-check + table check + runnable experiments
 ```
 

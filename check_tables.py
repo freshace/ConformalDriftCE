@@ -172,6 +172,33 @@ def check_joint_phase():
     check_le("Joint change  default within best (<= 0.7 pp)", 0.7, hi - per_phase["0"], "period_sweep_sql/")
 
 
+def check_initial_reference_gap():
+    """Largest gain of the current reference over the initial-reference monitor.
+
+    Both files are needed: the archived window dump covers stats/imdb, the
+    continuous-maintenance dump covers ergastf1/genome. Only the recurring
+    ("cycles") trajectory is used, which is the one the paper reports.
+    """
+    rows = []
+    for rel in ("data/tables/offline_windows.csv", "data/continuous/offline_windows.csv"):
+        with open(ROOT / rel, newline="", encoding="utf-8") as f:
+            rows.extend(r for r in csv.DictReader(f)
+                        if r["pattern"] == "cycles"
+                        and r["policy"] in ("current_coverage", "frozen_trigger"))
+    per = {}
+    for r in rows:
+        per.setdefault((r["dataset"], r["policy"], r["seed"]), []).append(float(r["coverage"]))
+    gain = {}
+    for dataset in {d for d, _, _ in per}:
+        cur = {s: mean(v) for (d, p, s), v in per.items() if d == dataset and p == "current_coverage"}
+        ini = {s: mean(v) for (d, p, s), v in per.items() if d == dataset and p == "frozen_trigger"}
+        common = sorted(set(cur) & set(ini))
+        if common:
+            gain[dataset] = mean([(cur[s] - ini[s]) * 100.0 for s in common])
+    check("Abstract  max gain over initial reference (15.95 pp)", 15.95, max(gain.values()), 0.01,
+          "offline_windows.csv (cycles)")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Verify the paper's table numbers against data/tables/.")
     ap.add_argument("--quiet", action="store_true", help="print the summary only")
@@ -187,6 +214,7 @@ def main():
     check_headline()
     check_phase_sweep()
     check_joint_phase()
+    check_initial_reference_gap()
 
     failed = [c for c in CHECKS if not c["ok"]]
     if not args.quiet:
