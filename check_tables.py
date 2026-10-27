@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Table-level verification for the Conformal-DriftCE artifact.
 
 Every number checked here is quoted in the paper (Table 3 and Table 5, and the
@@ -13,6 +13,7 @@ Usage::
 """
 import argparse
 import csv
+import random
 import statistics
 import sys
 from pathlib import Path
@@ -200,30 +201,43 @@ def check_initial_reference_gap():
 
 
 def check_phase_gain():
-    """Gain of the current reference over the best post-hoc schedule.
+    """Gain of the current reference over the best post-hoc schedule (genome).
 
-    The 10-seed rows are recomputed from ``period_runs.csv``. The 30-seed row
-    needs the schedule re-run on seeds 130-149, whose per-seed values are not
-    committed; it is checked against the transcript ``phase30.log`` instead.
+    Seeds 120-129 come from ``period_runs.csv``, seeds 130-149 from
+    ``phase30_runs.csv`` (the 30-seed re-run), current coverage from the archived
+    window dumps plus the seed extension.
     """
-    path = ROOT / "data" / "period_sweep" / "period_runs.csv"
-    with open(path, newline="", encoding="utf-8") as f:
-        gains = [float(r["gain_pp"]) for r in csv.DictReader(f)
-                 if r["dataset"] == "genome" and r["setting"] == "A:10 repairs, phase+4"]
-    check("Phase gain  genome, 10 seeds, over best phase", 2.61, mean(gains), 0.01,
-          "period_sweep/period_runs.csv")
+    cur = {}
+    for rel in ("data/tables/offline_runs.csv", "data/continuous/offline_runs.csv"):
+        with open(ROOT / rel, newline="", encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                if r["pattern"] == "cycles" and r["policy"] == "current_coverage":
+                    cur[(r["dataset"], int(r["seed"]))] = float(r["coverage"])
+    with open(ROOT / "data" / "period_sweep" / "seed_extension.csv", newline="", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            if r["policy"] == "current_coverage":
+                cur[(r["dataset"], int(r["seed"]))] = float(r["coverage"])
 
-    log = ROOT / "data" / "period_sweep" / "phase30.log"
-    gain = lo = hi = None
-    for line in log.read_text(encoding="utf-16", errors="replace").splitlines():
-        parts = line.split()
-        if len(parts) > 4 and parts[0] == "genome" and parts[1] == "30":
-            gain = float(parts[4])
-            lo, hi = (float(x) for x in line[line.index("[") + 1:line.index("]")].split(","))
-    check("Phase gain  genome, 30 seeds, over best phase", 1.79, gain, 0.01,
-          "period_sweep/phase30.log")
-    check("Phase gain  genome, 30 seeds, CI low", 0.67, lo, 0.01, "period_sweep/phase30.log")
-    check("Phase gain  genome, 30 seeds, CI high", 2.62, hi, 0.01, "period_sweep/phase30.log")
+    best = {}
+    with open(ROOT / "data" / "period_sweep" / "period_runs.csv", newline="", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            if r["setting"] == "A:10 repairs, phase+4":
+                best[(r["dataset"], int(r["seed"]))] = float(r["coverage"])
+    with open(ROOT / "data" / "period_sweep" / "phase30_runs.csv", newline="", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            best[(r["dataset"], int(r["seed"]))] = float(r["bestphase_coverage"])
+
+    seeds = sorted(s for (d, s) in best if d == "genome")
+    gains = [100.0 * (cur[("genome", s)] - best[("genome", s)]) for s in seeds]
+    check("Phase gain  genome, 10 seeds, over best phase", 2.61, mean(gains[:10]), 0.01,
+          "period_runs.csv")
+    check("Phase gain  genome, 30 seeds, over best phase", 1.79, mean(gains), 0.01,
+          "period_runs.csv + phase30_runs.csv")
+
+    rnd = random.Random(13)
+    boots = sorted(mean([gains[rnd.randrange(len(gains))] for _ in gains]) for _ in range(4000))
+    check("Phase gain  genome, 30 seeds, CI low", 0.67, boots[100], 0.03, "bootstrap, 4000")
+    check("Phase gain  genome, 30 seeds, CI high", 2.62, boots[3899], 0.03, "bootstrap, 4000")
 
 
 def main():

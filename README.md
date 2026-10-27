@@ -97,11 +97,11 @@ and `lightgbm`; that tree is **not** part of this repository. `run_all.py` there
 three scripts as skipped unless it finds it. The sweep itself takes about 20 seconds once the
 inputs are in place; the SQL replay additionally needs PostgreSQL.
 
-`data/period_sweep/phase30.log` is the transcript of the 30-seed comparison against the best
-post-hoc schedule, with a 4,000-resample bootstrap interval. The per-seed coverage of the
-best-phase schedule for the 20 added seeds was produced in that run and is not committed, so
-`check_tables.py` verifies the 10-seed row by recomputation and the 30-seed row against the
-transcript.
+`data/period_sweep/phase30.log` is the transcript of the 30-seed comparison, and
+`data/period_sweep/phase30_runs.csv` holds its per-seed rows (best-phase schedule coverage and
+current coverage for seeds 130–149). With `period_runs.csv` and the archived window dumps, the
+whole 30-seed comparison — gain 1.79 pp with a 4,000-resample bootstrap interval — is recomputed by
+`check_tables.py` from committed data, without re-running the sweep.
 
 ## Reproducing a specific number
 

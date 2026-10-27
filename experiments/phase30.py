@@ -69,6 +69,7 @@ for r in csv.DictReader((ROOT / "data" / "period_sweep" / "period_runs.csv").ope
 print(f"schedule: {SCHED}")
 print(f"{'db':9s} {'n':>3s} {'bestphase':>9s} {'current':>8s} {'gain':>7s} {'ci':>18s}")
 rng = np.random.default_rng(13)
+new_rows = []
 for name in DBS:
     d = load(name)
     rows = dict(old)
@@ -77,9 +78,19 @@ for name in DBS:
         r, _ = R.run_policy(d, P, roles(d, name, seed), p0, q0, tau0, "cycles", "periodic", seed,
                             schedule={"periodic": SCHED})
         rows[(name, seed)] = r["coverage"]
+        new_rows.append((name, seed, r["coverage"], cur[(name, seed)]))
     for label, seeds in (("10", OLD), ("30", OLD + NEW)):
         g = np.array([100 * (cur[(name, s)] - rows[(name, s)]) for s in seeds])
         boots = [g[rng.integers(0, len(g), len(g))].mean() for _ in range(4000)]
         lo, hi = np.percentile(boots, 2.5), np.percentile(boots, 97.5)
         print(f"{name:9s} {label:>3s} {100*np.mean([rows[(name,s)] for s in seeds]):9.2f} "
               f"{100*np.mean([cur[(name,s)] for s in seeds]):8.2f} {g.mean():7.2f}  [{lo:6.2f},{hi:6.2f}]")
+
+out = ROOT / "data" / "period_sweep" / "phase30_runs.csv"
+with out.open("w", newline="", encoding="utf-8") as f:
+    w = csv.writer(f)
+    w.writerow(["dataset", "seed", "setting", "bestphase_coverage", "current_coverage", "gain_pp"])
+    for name, seed, cov, cur_cov in new_rows:
+        w.writerow([name, seed, "A:10 repairs, phase+4", f"{cov:.6f}", f"{cur_cov:.6f}",
+                    f"{100*(cur_cov-cov):.4f}"])
+print(f"wrote {out} ({len(new_rows)} rows)")
