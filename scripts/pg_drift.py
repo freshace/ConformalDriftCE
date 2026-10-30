@@ -5,6 +5,7 @@
 流程：读查询 -> 算旧数据(true+pg_est) -> 训练LGBM+conformal -> 相关性漂移(DELETE+ANALYZE)
      -> 算新数据 -> 检测(覆盖掉) -> 自适应重训 -> 恢复
 """
+import os
 import re, sys
 import numpy as np
 import psycopg2
@@ -20,7 +21,11 @@ SEED = 42
 TMO = 15               # 每条查询最多 15s
 
 def get_conn():
-    c = psycopg2.connect(dbname="stats", user="postgres", password="postgres", host="localhost")
+    c = psycopg2.connect(dbname=os.environ.get("PGDATABASE", "stats"),
+                        user=os.environ.get("PGUSER", "postgres"),
+                        password=os.environ.get("PGPASSWORD", "postgres"),
+                        host=os.environ.get("PGHOST", "localhost"),
+                        port=os.environ.get("PGPORT", "5432"))
     c.autocommit = True
     return c
 

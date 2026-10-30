@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """PARQO 式期望惩罚稳健计划选择（真 PG + pg_hint_plan Rows() 强制基数）。
 对每条多表查询，比较三种"选计划"策略的 plan cost（EXPLAIN Total Cost）：
@@ -56,7 +56,11 @@ def main():
     qs = load(TSV)
     rng = np.random.RandomState(42)
     idx = rng.permutation(len(qs))[:NQ]
-    conn = psycopg2.connect(dbname="stats", user="postgres", password="postgres", host="localhost")
+    conn = psycopg2.connect(dbname=os.environ.get("PGDATABASE", "stats"),
+                           user=os.environ.get("PGUSER", "postgres"),
+                           password=os.environ.get("PGPASSWORD", "postgres"),
+                           host=os.environ.get("PGHOST", "localhost"),
+                           port=os.environ.get("PGPORT", "5432"))
     conn.autocommit = True
     cur = conn.cursor()
     cur.execute("SET statement_timeout = 15000")

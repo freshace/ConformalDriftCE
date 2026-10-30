@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """模型无关性演示：同一个 conformal+LGBM 外挂，套在 PG / ALECE / PRICE 三个底模上，
 对相关性漂移都能【检测(覆盖掉) + 修复(覆盖回)】。"""
 import os, sys, pickle
@@ -7,7 +7,10 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config, features, model, conformal
 
-ORACLE_DIR = r"../ETGE/results_expert_oracle"
+# Directory holding the archived per-query predictions of the ALECE and PRICE base models
+# (alece_stats.npy, price_stats.npy). Not part of the artifact; point DRIFTCE_ORACLE_DIR at
+# a copy, or regenerate them with the corresponding estimator.
+ORACLE_DIR = os.environ.get("DRIFTCE_ORACLE_DIR", "")
 
 def load_bases(pkl_path):
     n_ts, n_cs = features.load_table_col_space(pkl_path)
@@ -47,6 +50,11 @@ def wrap_exp(name, base_pred, sf, true, nfc):
     print(f"{name:10s} | 无漂移 {base_cov:6.1%} | 漂移后(冻) {cov_frozen:6.1%} | 修复后 {cov_fix:6.1%} | 检-修 {cov_fix-cov_frozen:+6.1%}")
 
 def main():
+    if not ORACLE_DIR:
+        raise SystemExit(
+            "DRIFTCE_ORACLE_DIR is not set. This experiment needs the archived per-query "
+            "predictions of the ALECE and PRICE base models (alece_stats.npy, price_stats.npy); "
+            "see DATA.md.")
     base, true, sf, nfc, idx = load_bases(config.DATA_PATH)
     pg = base
     alece = np.load(os.path.join(ORACLE_DIR, "alece_stats.npy"))[idx]

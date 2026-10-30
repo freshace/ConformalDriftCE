@@ -1,20 +1,15 @@
 # -*- coding: utf-8 -*-
-"""§4.9 通用性(跨底模)的重复切分版（P4/P1 替代）：给 PG/ALECE/PRICE 三底模的
-"无漂移 / 漂移后冻结 / 修复后" 补 95% CI。
+"""Repeated-split version of the base-model experiment: 95% CIs for PG / ALECE / PRICE
+in the no-drift, frozen-after-drift and repaired states.
 
-【为什么是"P1 的替代"】P1 原计划把跨底模从 3 个扩到 5 个(+MSCN/DeepDB)。
-经全仓勘察（.tools/_p1_probe*.py），这条**从现有产物不可行**：
-  - AdaCE 备份(results_backup_15dim_20260909)是**另一条线**：15 维特征、2749 条分区，
-    且 meta 是特征矩阵而非索引 ⇒ 与 DriftCE 的 50000 条 622 维工作负载**无法对齐**
-    （用 (真值, PG估计) 配对匹配：命中 0 条）；
-  - ETGE/results_expert_oracle 只含 PG / SchemaBase / LGBM / ALECE / Neural / PRICE 六个，
-    **没有 MSCN / DeepDB / NeuroCard**；
-  - 该 oracle npz 又是另一个 10000 条分区。
-⇒ 要加 MSCN/DeepDB 必须**在 stats 工作负载上真跑那两个估计器**（工程量大且 model-agnostic
-   已非本文新颖性，见 ICDE'22）。故本脚本改为把现有三底模结论**补上 CI**——这同样落在 P4 范围内。
+The protocol matches ``experiment_modelagnostic.py`` (it reuses ``load_bases`` and consumes
+the RNG in the same order), so the first repetition (seed 42) reproduces that script's
+single reading.
 
-【复现门】口径与 `experiment_modelagnostic.py` 同源（复用其 load_bases；同一 rng 顺序），
-第 1 次重复(seed=42)应复现其单次读数。
+Three base models are covered, namely the ones with archived per-query predictions. Adding
+MSCN or DeepDB would require re-running those estimators on the workload, which this
+artifact does not ship; the cross-model claim therefore rests on three estimators plus the
+model-agnostic design of the layer itself.
 
 【产出】results_repro/experiment_modelagnostic_ci.txt + modelagnostic_ci.npz
 """

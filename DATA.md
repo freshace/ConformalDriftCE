@@ -1,4 +1,4 @@
-﻿# Data
+# Data
 
 This repository ships code, protocol files, derived tables and figure sources (about 16 MB under
 `data/`). The large binary caches used during development are **not** redistributed.
@@ -51,6 +51,7 @@ The code reads its inputs from environment variables, so no file paths are hard-
 | `DRIFTCE_DATA_PATH` | `config.py`, most experiments | Path to the query feature/label cache (`features40_s3a.pkl`) |
 | `DRIFTCE_FEATURES_ROOT` | `experiment_crossdataset*.py` | Directory holding the per-database feature caches |
 | `DRIFT_FIG_OUT` | `experiments/plot_fig12_planregret.py` | Output directory for regenerated figures |
+| `DRIFTCE_ORACLE_DIR` | `experiments/experiment_modelagnostic*.py` | Directory with the archived per-query predictions of the ALECE and PRICE base models |
 
 Steps for a full re-run:
 

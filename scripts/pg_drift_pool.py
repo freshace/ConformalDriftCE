@@ -378,11 +378,11 @@ def run_config(cur, conn, a, sqls, log):
 # ----------------------------------------------------------------- 主流程
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--db", default="stats")
-    ap.add_argument("--host", default="localhost")
-    ap.add_argument("--port", default=5432, type=int)
-    ap.add_argument("--user", default="postgres")
-    ap.add_argument("--password", default="postgres")
+    ap.add_argument("--db", default=os.environ.get("PGDATABASE", "stats"))
+    ap.add_argument("--host", default=os.environ.get("PGHOST", "localhost"))
+    ap.add_argument("--port", default=int(os.environ.get("PGPORT", "5432")), type=int)
+    ap.add_argument("--user", default=os.environ.get("PGUSER", "postgres"))
+    ap.add_argument("--password", default=os.environ.get("PGPASSWORD", "postgres"))
     ap.add_argument("--data-dir", default="~/stats_data",
                     help="含 postgres_create_<db>.sql 与 *.csv 的目录（restore 用）")
     ap.add_argument("--workload", default="stats_multi_table.tsv")

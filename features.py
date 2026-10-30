@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""强特征：schema one-hot + 统计 + log(pg)（移植自 ETGE 的 build_schema_feature / stats9）"""
+"""Strong features: schema one-hot encoding, column statistics, and log of the PostgreSQL estimate."""
 import pickle
 import numpy as np
 
